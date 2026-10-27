@@ -2,26 +2,29 @@ package com.tecsup.petclinic.services;
 
 import com.tecsup.petclinic.dtos.VisitDTO;
 import com.tecsup.petclinic.exceptions.VisitNotFoundException;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
-@Slf4j
-public class VisitServiceTest {
+@Transactional
+class VisitServiceTest {
 
     @Autowired
     private VisitService visitService;
 
     @Test
-    public void testCreateVisit() {
-        VisitDTO visitDTO = VisitDTO.builder()
+    void testCreateVisit() {
+        VisitDTO visit = VisitDTO.builder()
                 .petId(1)
                 .vetId(1)
                 .visitDate(LocalDate.of(2025, 1, 15))
@@ -29,70 +32,87 @@ public class VisitServiceTest {
                 .cost(new BigDecimal("65.00"))
                 .build();
 
-        VisitDTO newVisitDTO = this.visitService.create(visitDTO);
+        VisitDTO created = visitService.create(visit);
 
-        log.info("VISIT CREATED : {}", newVisitDTO);
-
-        assertNotNull(newVisitDTO.getId());
-        assertEquals(visitDTO.getPetId(), newVisitDTO.getPetId());
-        assertEquals(visitDTO.getVetId(), newVisitDTO.getVetId());
-        assertEquals(visitDTO.getVisitDate(), newVisitDTO.getVisitDate());
-        assertEquals(visitDTO.getDescription(), newVisitDTO.getDescription());
-        assertEquals(visitDTO.getCost(), newVisitDTO.getCost());
+        assertNotNull(created.getId());
+        assertEquals(visit.getPetId(), created.getPetId());
+        assertEquals(visit.getVetId(), created.getVetId());
+        assertEquals(visit.getVisitDate(), created.getVisitDate());
+        assertEquals(visit.getDescription(), created.getDescription());
+        assertEquals(visit.getCost(), created.getCost());
     }
 
     @Test
-    public void testUpdateVisit() {
-        VisitDTO visitDTO = VisitDTO.builder()
+    void testUpdateVisit() {
+        VisitDTO visit = visitService.create(VisitDTO.builder()
                 .petId(1)
                 .vetId(1)
                 .visitDate(LocalDate.of(2025, 2, 10))
                 .description("initial checkup")
                 .cost(new BigDecimal("40.00"))
-                .build();
-        VisitDTO createdVisitDTO = this.visitService.create(visitDTO);
+                .build());
 
-        createdVisitDTO.setVisitDate(LocalDate.of(2025, 2, 11));
-        createdVisitDTO.setDescription("follow-up checkup");
-        createdVisitDTO.setCost(new BigDecimal("55.00"));
+        visit.setVisitDate(LocalDate.of(2025, 2, 11));
+        visit.setDescription("follow-up checkup");
+        visit.setCost(new BigDecimal("55.00"));
 
-        VisitDTO updatedVisitDTO = this.visitService.update(createdVisitDTO);
+        VisitDTO updated = visitService.update(visit);
 
-        assertEquals(createdVisitDTO.getId(), updatedVisitDTO.getId());
-        assertEquals(createdVisitDTO.getVisitDate(), updatedVisitDTO.getVisitDate());
-        assertEquals(createdVisitDTO.getDescription(), updatedVisitDTO.getDescription());
-        assertEquals(createdVisitDTO.getCost(), updatedVisitDTO.getCost());
-
-        try {
-            VisitDTO visitFound = this.visitService.findById(updatedVisitDTO.getId());
-            assertEquals(updatedVisitDTO.getDescription(), visitFound.getDescription());
-            assertEquals(updatedVisitDTO.getCost(), visitFound.getCost());
-        } catch (VisitNotFoundException e) {
-            fail(e.getMessage());
-        }
+        assertEquals(visit.getId(), updated.getId());
+        assertEquals(visit.getVisitDate(), updated.getVisitDate());
+        assertEquals(visit.getDescription(), updated.getDescription());
+        assertEquals(visit.getCost(), updated.getCost());
     }
 
     @Test
-    public void testFindVisitById() {
-        VisitDTO visitDTO = VisitDTO.builder()
-                .petId(1)
-                .vetId(1)
-                .visitDate(LocalDate.of(2025, 3, 5))
-                .description("vaccination")
-                .cost(new BigDecimal("30.00"))
-                .build();
-        VisitDTO createdVisitDTO = this.visitService.create(visitDTO);
+    void testFindVisitById() throws VisitNotFoundException {
+        VisitDTO visit = visitService.findById(5);
 
-        try {
-            VisitDTO visitFound = this.visitService.findById(createdVisitDTO.getId());
-            assertEquals(createdVisitDTO.getId(), visitFound.getId());
-            assertEquals(visitDTO.getPetId(), visitFound.getPetId());
-            assertEquals(visitDTO.getVetId(), visitFound.getVetId());
-            assertEquals(visitDTO.getVisitDate(), visitFound.getVisitDate());
-            assertEquals(visitDTO.getDescription(), visitFound.getDescription());
-            assertEquals(visitDTO.getCost(), visitFound.getCost());
-        } catch (VisitNotFoundException e) {
-            fail(e.getMessage());
-        }
+        assertEquals(5, visit.getId());
+        assertEquals(1, visit.getPetId());
+        assertEquals("general checkup", visit.getDescription());
+        assertEquals(new BigDecimal("65.00"), visit.getCost());
+    }
+
+    @Test
+    void testFindByPetId() {
+        List<VisitDTO> visits = visitService.findByPetId(7);
+
+        assertEquals(2, visits.size());
+        assertEquals(7, visits.get(0).getPetId());
+        assertEquals(7, visits.get(1).getPetId());
+    }
+
+    @Test
+    void testFindByVetId() {
+        List<VisitDTO> visits = visitService.findByVetId(2);
+
+        assertEquals(2, visits.size());
+        assertEquals(2, visits.get(0).getVetId());
+        assertEquals(2, visits.get(1).getVetId());
+    }
+
+    @Test
+    void testDeleteVisit() {
+        assertNotNull(visitService.findById(1));
+
+        visitService.delete(1);
+
+        assertThrows(VisitNotFoundException.class, () -> visitService.findById(1));
+    }
+
+    @Test
+    void testCalculateTotalCostByPet() {
+        assertEquals(new BigDecimal("320.00"), visitService.calculateTotalCostByPet(7));
+    }
+
+    @Test
+    void testCalculateTotalCostByPet_NoVisits() {
+        assertEquals(BigDecimal.ZERO, visitService.calculateTotalCostByPet(100));
+    }
+
+    @Test
+    void testFindVisitById_NotFound() {
+        assertThrows(VisitNotFoundException.class, () -> visitService.findById(999));
     }
 }
