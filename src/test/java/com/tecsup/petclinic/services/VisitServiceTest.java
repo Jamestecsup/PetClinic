@@ -93,7 +93,7 @@ class VisitServiceTest {
     }
 
     @Test
-    void testDeleteVisit() {
+    void testDeleteVisit() throws VisitNotFoundException {
         assertNotNull(visitService.findById(1));
 
         visitService.delete(1);
