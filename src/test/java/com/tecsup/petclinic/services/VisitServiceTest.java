@@ -20,7 +20,7 @@ public class VisitServiceTest {
     public void testCalculateTotalCostByPet() {
         assertEquals(
                 new BigDecimal("320.00"),
-                // Breakpoint aquí; usa Step Into para entrar a calculateTotalCostByPet.
+
                 visitService.calculateTotalCostByPet(7)
         );
     }
@@ -29,7 +29,7 @@ public class VisitServiceTest {
     public void testCalculateTotalCostByPet_NoVisits() {
         assertEquals(
                 BigDecimal.ZERO,
-                // Breakpoint aquí; usa Step Into para entrar a calculateTotalCostByPet.
+
                 visitService.calculateTotalCostByPet(100)
         );
     }
@@ -38,7 +38,7 @@ public class VisitServiceTest {
     public void testFindVisitById_NotFound() {
         assertThrows(
                 VisitNotFoundException.class,
-                // Breakpoint aquí; usa Step Into para entrar a findById.
+
                 () -> visitService.findById(999)
         );
     }
