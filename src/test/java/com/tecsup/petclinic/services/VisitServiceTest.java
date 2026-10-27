@@ -1,8 +1,5 @@
 package com.tecsup.petclinic.services;
 
-import com.tecsup.petclinic.dtos.PetDTO;
-import com.tecsup.petclinic.dtos.VisitDTO;
-import com.tecsup.petclinic.entities.Visit;
 import com.tecsup.petclinic.exceptions.VisitNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -10,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,16 +23,15 @@ public class VisitServiceTest {
      */
     @Test
     public void testCalculateTotalCostByPet() {
-        // Given: un ID de pet con varias visitas con costos
-        Integer PET_ID = 1;
+        // Pet 7 tiene dos visitas en los datos de prueba: 45.00 + 275.00.
+        Integer PET_ID = 7;
+        BigDecimal TOTAL_COST_EXPECTED = new BigDecimal("320.00");
 
-        // Expecting: que el total calculado sea la suma de todos los costos
         BigDecimal totalCost = this.visitService.calculateTotalCostByPet(PET_ID);
 
-        // Then: verificar que el resultado sea correcto
         assertNotNull(totalCost);
-        assertTrue(totalCost.compareTo(BigDecimal.ZERO) >= 0,
-                "El costo total no debe ser negativo");
+        assertEquals(0, TOTAL_COST_EXPECTED.compareTo(totalCost),
+                "El costo total debe ser la suma de las visitas de la mascota");
 
         log.info("COSTO TOTAL PARA EL PET {} : {}", PET_ID, totalCost);
     }
@@ -47,13 +42,12 @@ public class VisitServiceTest {
      */
     @Test
     public void testCalculateTotalCostByPet_NoVisits() {
-        // Given: un ID de pet que no tiene visitas (por ejemplo, pet con ID 100)
+        // Pet 100 no tiene visitas en los datos de prueba.
         Integer PET_ID = 100;
 
         // When: calcular el costo total
         BigDecimal totalCost = this.visitService.calculateTotalCostByPet(PET_ID);
 
-        // Then: debe devolver ZERO
         assertNotNull(totalCost);
         assertEquals(BigDecimal.ZERO, totalCost,
                 "El costo total debe ser ZERO cuando no hay visitas");
@@ -67,10 +61,8 @@ public class VisitServiceTest {
      */
     @Test
     public void testFindVisitById_NotFound() {
-        // Given: un ID de visita que no existe
         Integer VISIT_ID = 999;
 
-        // When & Then: debe lanzar VisitNotFoundException
         VisitNotFoundException exception = assertThrows(
                 VisitNotFoundException.class,
                 () -> this.visitService.findById(VISIT_ID),
