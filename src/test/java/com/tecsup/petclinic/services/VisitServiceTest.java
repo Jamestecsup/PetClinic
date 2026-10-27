@@ -40,4 +40,19 @@ public class VisitServiceTest {
 
         assertEquals(visitsExpected.size(), visits.size());
     }
+
+    @Test
+    public void testFindByVetId() {
+        int VET_ID = 1;
+        List<Visit> visitsExpected = List.of(
+                new Visit(1, 1, VET_ID, LocalDate.of(2024, 1, 15), "Checkup", new BigDecimal("50.00"))
+        );
+
+        Mockito.when(this.repository.findByVetId(VET_ID))
+                .thenReturn(visitsExpected);
+
+        List<VisitDTO> visits = this.visitService.findByVetId(VET_ID);
+
+        assertEquals(visitsExpected.size(), visits.size());
+    }
 }
